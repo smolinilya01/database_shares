@@ -109,9 +109,9 @@ def add_data(path: str, conn: create_conn) -> None:
     extend = os_path.splitext(os_path.split(path)[1])[1]
 
     if extend == '.xlsx':
-        data = read_excel(path, parse_dates=['Дата'])
+        data = read_excel(path, parse_dates=[0])  # parse_dates=['Дата']
     elif extend == '.csv':
-        data = read_csv(path, parse_dates=['Дата'], sep='\t')
+        data = read_csv(path, parse_dates=[0], sep='\t')  # parse_dates=['Дата']
     else:
         raise ValueError(f'Файл с неизвестных расширением {path}')
 
@@ -195,8 +195,8 @@ def insert_share_data(data: DataFrame, name: str) -> None:
             'Продажа': -1,
             'Купля': 1
         })
-        cur_share_data['dt'] = (cur_share_data['Дата'] +
-                                cur_share_data['Время'].map(str_in_tdelta))
+        cur_share_data['dt'] = (cur_share_data.iloc[:, 0] +
+                                cur_share_data['Время'].map(str_in_tdelta))  # cur_share_data['Дата']
 
         q_2 = f"""
         SELECT cum_delta 
@@ -223,8 +223,6 @@ def insert_share_data(data: DataFrame, name: str) -> None:
         cur.executemany(q_3, cur_share_data.values)
         conn.commit()
 
-import time
-st = time.time()
-load_files()
-end = time.time()
-print((end-st)/60)
+
+if __name__ == '__main__':
+    load_files()
