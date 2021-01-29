@@ -1,4 +1,5 @@
-"""Load files into DB
+"""
+Load files into DB
 Обязательно нужно соблюдать полное наличие данных.
 То есть в папке с данными не должно быть пропусков дней.
 Если день будет пропушен, то функционал не позволяет добавить его.
@@ -14,11 +15,13 @@ from pandas import (
 from joblib import Parallel, delayed, cpu_count
 from common.functions import str_in_tdelta
 
-LOAD_PATH = r"F:\!Data_Shares\База эксель\База эксель\1"
+LOAD_PATH = r"F:\!Data_Shares\База эксель\База эксель"
 
 
 def load_files() -> None:
-    """Главная функция загрузки файло в базу"""
+    """Главная функция загрузки файлов в базу.
+    Файлы - это файлы эксель с данными по торгам.
+    """
     with create_conn() as conn:
         total_files = files_in_dir(path=LOAD_PATH)
         db_files = files_in_db(conn=conn)
@@ -34,7 +37,7 @@ def load_files() -> None:
 
 
 def files_in_dir(path: str) -> DataFrame:
-    """Файлы в папке с данными, наименование файла с полным путем
+    """Возвращает список файлов в папке с данными, наименование файла с полным путем.
 
     :param path: путь к папке с выгрузками из квика
     """
@@ -49,7 +52,7 @@ def files_in_dir(path: str) -> DataFrame:
 
 
 def files_in_db(conn: create_conn) -> DataFrame:
-    """Наименование файлов, которые уже есть в базе
+    """Возвращает наименования файлов, которые уже есть в базе.
 
     :param conn: соединение с DB postgres
     """
@@ -115,6 +118,9 @@ def add_data(path: str, conn: create_conn) -> None:
     else:
         raise ValueError(f'Файл с неизвестных расширением {path}')
 
+    if 'Инструмент' in data.columns:
+        data = data.rename({'Инструмент': 'Бумага'}, axis=1)
+
     file_shares = Series(data=data['Бумага'].unique())
     db_shares = shares_in_db(conn)
 
@@ -155,7 +161,7 @@ def shares_in_db(conn: create_conn) -> DataFrame:
 
 
 def insert_share_data(data: DataFrame, name: str) -> None:
-    """Добавляет данные по акции в соответствующую таблицу.
+    """Дописывает в конец таблицы данные по акции в соответствующую таблицу.
 
     :param data: данные из файла
     :param name: название акции"""
