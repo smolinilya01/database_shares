@@ -1,6 +1,8 @@
-"""Dump files
+"""
+Dump files
 
-Выгрузка всех акций в файлы для просмотра через эксель"""
+Выгрузка всех акций в файлы для просмотра через эксель
+"""
 
 from common.connections import create_conn
 from pandas import DataFrame, read_sql
@@ -10,7 +12,9 @@ DUMP_PATH = r"E:\!Base shares 2016\Экспорт"
 
 
 def dump_files() -> None:
-    """Выгружает готовые файлы (csv) с данными для графиков"""
+    """Параллельно делает готовые файлы (csv) с данными для графиков
+    Выгружает данные по всем акциям из базы.
+    """
     with create_conn() as conn:
 
         q_0 = """
@@ -28,15 +32,18 @@ def dump_files() -> None:
 
 
 def dump_share(name_table: str) -> None:
-    """Выгружает данные по акции в таблице table, подходит для распараллеливания.
+    """Выгружает данные по акции name_table определенного размера (пропускает некоторые строки,
+    чтобы в итоге получилось примерно 25 тыс строк).
+    Подходит для распараллеливания.
 
-    :param name_table: наименование таблицы в DB postgres
+    :param name_table: наименование таблицы (которая соотвествует имени акции) в DB postgres
     """
     with create_conn() as conn:
         q_0 = f"""select count(micex_id) from {name_table}"""
         count_rows = read_sql(q_0, conn).iloc[0, 0]
-        # по столько срок пропускать, что бы получить примерно 25_000 строк
-        div_rows: int = count_rows // 25_000
+        """по столько срок пропускать, что бы получить примерно 25_000 строк"""
+        div_rows: int = round(count_rows / 25_000)
+        div_rows = 1 if div_rows == 0 else div_rows
 
         q_1 = f"""select share_name from list_share where id = {int(name_table.split('_')[1])}"""
         name_share: str = read_sql(q_1, conn).iloc[0, 0]
